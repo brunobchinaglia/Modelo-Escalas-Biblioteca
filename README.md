@@ -39,7 +39,7 @@ O primeiro modelo foca nos dias de maior complexidade para o rodízio. Ele consi
 
 ### 2. Modelo de Ajuste (Dias da Semana e Feriados)
 
-Após a definição da escala de sextas e sábados, o segundo modelo é executado para alocar os turnos noturnos dos demais dias da semana (segunda a quinta), com foco especial em semanas que contêm feriados.
+Após a definição da escala de sextas-feiras e sábados, o segundo modelo é executado para alocar os turnos noturnos dos demais dias da semana (segunda-feira à quinta-feira), com foco especial em semanas que contêm feriados.
 
 * **Função Objetivo:** Minimizar a diferença entre o funcionário que mais trabalha e o que menos trabalha em semanas com feriados, promovendo o equilíbrio das folgas.
 * **Restrições:**
@@ -91,5 +91,6 @@ Este projeto é distribuído sob a **Licença Pública Geral GNU (GPL)**. Esta l
 
 * **Professora Dra. Franklina Maria Bragion Toledo** (Orientadora)
 * **Dr. Douglas N. Nogueira** (Coorientador)
-* **Juliana de Souza Moraes** (Chefe-técnica da Biblioteca do ICMC/USP) e equipe, pelas valiosas contribuições e pela validação do modelo.
+* **Juliana de Souza Moraes** (Chefe-técnica da Biblioteca do ICMC/USP).
+* **Regina C. V. Medeiros** e **Irene Lucinda** (Funcionárias da Biblioteca do ICMC/USP), pelas valiosas contribuições e pela validação do modelo.
 * Ao trabalho anterior de **Lanzuolo, Nascimento e Toledo (2024)**, que serviu como base para este projeto.
