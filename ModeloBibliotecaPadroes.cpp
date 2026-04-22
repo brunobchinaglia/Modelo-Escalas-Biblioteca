@@ -1,4 +1,3 @@
-// complete versão com restrições pedidas
 #include <bits/stdc++.h>
 #include <gurobi_c++.h>
 #include <cmath>
@@ -7,7 +6,7 @@
 
 using namespace std;
 
-const int DAYS = 6; // seg, ter, qua, qui, sex, sab
+const int DAYS = 6; // mon, tue, wed, thu, fri, sat
 const vector<string> DAY_NAMES = {"seg","ter","qua","qui","sex","sab", "dom"};
 const vector<string> MONTH_NAMES = {
     "", "JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO",
@@ -35,7 +34,7 @@ struct Preference {
     vector<int> saturday;
 };
 
-// Função para remover acentos e normalizar a string
+// Function to remove accents and normalize the string
 std::string normalize(const std::string& input) {
     std::string output;
     std::locale loc("pt_BR.utf8");
@@ -69,16 +68,16 @@ vector<bitset<DAYS>> generatePatterns(const vector<int>& baseGroup) {
 
         if (weekdayCount + 1 <= 2) {
             auto fri = base;
-            fri.set(4); // sexta-feira
-            if (!(base.test(0) && base.test(1))) { // Não permite seg-ter e sexta
+            fri.set(4); // Friday
+            if (!(base.test(0) && base.test(1))) { // Forbid Mon-Tue and Friday
                 patterns.push_back(fri);
             }
         }
 
         if (weekdayCount + 1 <= 3) {
             auto sat = base;
-            sat.set(5); // sábado
-            patterns.push_back(sat); // Permite seg-ter e sábado
+            sat.set(5); // Saturday
+            patterns.push_back(sat); // Allow Mon-Tue and Saturday
         }
     }
     return patterns;
@@ -253,7 +252,7 @@ int main() {
                 string colName = header[i];
                 transform(colName.begin(), colName.end(), colName.begin(), ::tolower); // Normalize to lowercase
 
-                string s = normalize(v[i]); // Normaliza a string, removendo acentos e espaços
+                string s = normalize(v[i]); // Normalize string, removing accents and spaces
                 int val;
                 if (s.empty()) val = 4;
                 else if (s == "gostaria") val = 3;
@@ -497,7 +496,7 @@ int main() {
             }
         }
 
-        // ---------- Coverage for other weekdays (seg..qui) : exactly 2 if not holiday ----------
+        // ---------- Coverage for other weekdays (Mon..Thu) : exactly 2 if not holiday ----------
         for (int w=0; w<W; ++w) {
             for (int d=0; d<=3; ++d) {
                 if (!day_exists[w][d]) continue;
@@ -818,7 +817,7 @@ int main() {
         }
 
         // ==================================================
-        // OBJETIVO — HAPPINESS
+        // OBJECTIVE — HAPPINESS
         // ==================================================
 
         vector<GRBVar> alegria(N);
@@ -834,21 +833,21 @@ int main() {
             Preference emptyPr;
             Preference &pr = (it == prefs.end()) ? emptyPr : it->second;
 
-            // --- SEXTAS ---
+            // --- FRIDAYS ---
             if (employees[i].name != "Juliana") {
                 for (int w = 0; w < (int)all_friday_weeks.size(); ++w) {
                     int weekIdx = all_friday_weeks[w];
                     if (w < (int)pr.friday.size()) {
                         GRBLinExpr X = work_expr(i, weekIdx, 4);
-                        // Lógica: Se trabalha, ganha pr.friday[w]. Se folga, ganha 4.
-                        // Matematicamente: 4 + (pr.friday[w] - 4) * X
+                        // Logic: If working, gets pr.friday[w]. If off, gets 4.
+                        // Mathematically: 4 + (pr.friday[w] - 4) * X
                         expressaoFelicidade += (double(pr.friday[w]) - 4.0) * X;
                         somaConstantesFolga += 4.0;
                     }
                 }
             }
 
-            // --- SÁBADOS ---
+            // --- SATURDAYS ---
             if (employees[i].name != "Bia") {
                 for (int w = 0; w < (int)all_saturday_weeks.size(); ++w) {
                     int weekIdx = all_saturday_weeks[w];
@@ -860,22 +859,22 @@ int main() {
                 }
             }
 
-            // --- CÁLCULO DO DENOMINADOR (Cenário Ideal Realista) ---
+            // --- DENOMINATOR CALCULATION (Realistic Ideal Scenario) ---
             double denominador = 0.0;
 
-            // Para Sextas: Considera que ela trabalhará exatamente MSx dias (os com melhor nota)
+            // For Fridays: Assume working exactly MSx days (those with the highest score)
             if (employees[i].name != "Juliana") {
                 vector<int> p_fri = pr.friday;
                 sort(p_fri.begin(), p_fri.end(), greater<int>());
                 
                 int T_fri = (int)MSx; 
                 for (int k = 0; k < (int)p_fri.size(); ++k) {
-                    if (k < T_fri) denominador += p_fri[k]; // Dias de trabalho (melhores notas)
-                    else denominador += 4.0;               // Dias de folga (nota máxima 4)
+                    if (k < T_fri) denominador += p_fri[k]; // Working days (best scores)
+                    else denominador += 4.0;               // Days off (max score 4)
                 }
             }
 
-            // Para Sábados: Considera a carga horária do grupo STI ou SAU
+            // For Saturdays: Consider the workload of STI or SAU group
             if (employees[i].name != "Bia") {
                 vector<int> p_sat = pr.saturday;
                 sort(p_sat.begin(), p_sat.end(), greater<int>());
@@ -887,8 +886,8 @@ int main() {
                 }
             }
 
-            // --- ADICIONAR RESTRIÇÃO AO MODELO ---
-            // alegria = (expressao + soma) / denominador  =>  alegria * denominador - expressao = soma
+            // --- ADD CONSTRAINT TO THE MODEL ---
+            // happiness = (expression + sum) / denominator => happiness * denominator - expression = sum
             if (denominador > 0) {
                 model.addConstr(alegria[i] * denominador == expressaoFelicidade + somaConstantesFolga, 
                                 "def_alegria_i" + to_string(i));
@@ -898,10 +897,10 @@ int main() {
         }
 
         // ==================================================
-        // CÁLCULO DO TOTAL DE DIAS TRABALHADOS (Para balanceamento)
+        // TOTAL WORKED DAYS CALCULATION (For balancing)
         // ==================================================
         
-        // 1. Variáveis para armazenar o total de dias de cada funcionária
+        // 1. Variables to store total days for each employee
         vector<GRBVar> totalDias(N);
         for (int i = 0; i < N; ++i) {
             totalDias[i] = model.addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, "totalDias_" + to_string(i));
@@ -909,39 +908,37 @@ int main() {
             GRBLinExpr sumDias = 0;
             const auto& pats = (employees[i].group == 'A') ? patsA : (employees[i].group == 'B') ? patsB : patsJ;
             
-            // Soma dias trabalhados usando o pats[j].count()
+            // Sum worked days using pats[j].count()
             for (int w = 0; w < W; ++w) {
                 for (int j = 0; j < (int)pats.size(); ++j) {
                     sumDias += pats[j].count() * x[{i, j, w}];
                 }
             }
-            // Finge que a Bia trabalhou uma média de sábados para não ser injusto
+            // Pretend Bia worked an average of Saturdays to avoid unfairness
             if (employees[i].name == "Bia")
                 sumDias += MSb_sti;
 
-            // Conecta a variável à soma calculada
+            // Connect variable to the calculated sum
             model.addConstr(totalDias[i] == sumDias, "def_totalDias_i" + to_string(i));
         }
 
-        // 2. Variáveis para o Máximo e Mínimo globais
+        // 2. Variables for global Maximum and Minimum
         GRBVar maxDias = model.addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, "maxDias");
         GRBVar minDias = model.addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, "minDias");
 
-        // 3. Forçar maxDias a ser maior que todos, e minDias a ser menor que todos
+        // 3. Force maxDias to be greater than all, and minDias to be lesser than all
         for (int i = 0; i < N; ++i) {
-            // NOTA: Talvez você queira pular a Juliana (i) aqui, explicarei abaixo!
             model.addConstr(maxDias >= totalDias[i], "link_maxDias_i" + to_string(i));
             model.addConstr(minDias <= totalDias[i], "link_minDias_i" + to_string(i));
         }
 
-        // 4. Variável W (A diferença / gap)
+        // 4. Variable W (The difference / gap)
         GRBVar var_w = model.addVar(0.0, GRB_INFINITY, 0.0, GRB_CONTINUOUS, "w_diferenca");
         model.addConstr(var_w == maxDias - minDias, "def_w_diferenca");
 
-        // --------------------------------
-        // OBJETIVO
-        // (opção recomendada: maximizar menor alegria)
-        // --------------------------------
+        // ==================================================
+        // OBJECTIVE
+        // ==================================================
 
         GRBVar z = model.addVar(0.0, 1.0, 0.0, GRB_CONTINUOUS, "z");
 
@@ -951,7 +948,7 @@ int main() {
 
         GRBLinExpr obj = 10 * z;
         
-        // Adiciona a alegria de cada funcionária à soma
+        // Add the happiness of each employee to the sum
         for (int i = 0; i < N; ++i) {
             obj += alegria[i];
         }
@@ -964,7 +961,7 @@ int main() {
 
         cout << "Maximum minimum happiness z = " << z.get(GRB_DoubleAttr_X) << "\n";
 
-        // --- NOVO TRECHO: Imprimir a alegria de cada funcionária ---
+        // --- Print the happiness of each employee ---
         cout << "\n=== Felicidade (Alegria) por Funcionária ===\n";
         for (int i = 0; i < N; ++i) {
             cout << left << setw(12) << employees[i].name 
@@ -1001,7 +998,7 @@ int main() {
         }
 
         // ==================================================
-        // PRINT (FORMATADO, COM DIA DA SEMANA)
+        // PRINT (FORMATTED, WITH WEEKDAY)
         // ==================================================
         int idxCal = 0;
         while (idxCal < (int)calendar.size()) {
