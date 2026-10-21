@@ -1,8 +1,8 @@
 # Escala de Horários da Biblioteca ICMC/USP
 
-Este projeto, desenvolvido com o apoio da **FAPESP** (Fundação de Amparo à Pesquisa do Estado de São Paulo) no âmbito de Iniciação Científica, oferece uma solução computacional robusta para a otimização da escala de horários dos funcionários da Biblioteca do Instituto de Ciências Matemáticas e de Computação (ICMC) da USP. O objetivo é gerar uma escala de trabalho justa e eficiente, que respeite as regras de funcionamento da biblioteca, as leis trabalhistas e as preferências individuais dos funcionários.
+Este projeto, desenvolvido com o apoio da **FAPESP** (Fundação de Amparo à Pesquisa do Estado de São Paulo, processo nº 2025/01587-2) no âmbito de Iniciação Científica, oferece uma solução computacional robusta para a otimização da escala de horários dos funcionários da Biblioteca do Instituto de Ciências Matemáticas e de Computação (ICMC) da USP. O objetivo é gerar uma escala de trabalho justa e eficiente, que respeite as regras de funcionamento da biblioteca, as leis trabalhistas e as preferências individuais dos funcionários.
 
-O projeto evoluiu para incorporar duas abordagens de modelagem matemática: um modelo clássico de restrições e um modelo avançado baseado na **Geração de Padrões**. O resultado é uma escala semestral detalhada, apresentada em formato de calendário, que busca maximizar a satisfação e o bem-estar da equipe.
+O projeto evoluiu para incorporar três abordagens de modelagem matemática: um modelo de restrições em duas etapas (decomposição), um modelo baseado na **Geração de Padrões** e um modelo baseado em **Fluxos em Redes**. O resultado é uma escala semestral detalhada, apresentada em formato de calendário, que busca maximizar a satisfação e o bem-estar da equipe.
 
 ## Sobre o Projeto
 
@@ -31,6 +31,20 @@ A abordagem inicial divide o problema sequencialmente:
 Esta nova formulação altera o paradigma de resolução. Em vez de decidir turno a turno, o modelo:
 1. **Gera Padrões Válidos:** Cria todas as combinações de escalas mensais/semestrais possíveis (padrões) para um funcionário que já respeitem individualmente as regras trabalhistas e de saúde (ex: limite de turnos noturnos, folgas mínimas).
 2. **Seleção Ótima:** Utiliza o *solver* Gurobi para selecionar exatamente um padrão de trabalho para cada funcionário, de modo que a combinação desses padrões atenda à demanda de cobertura da biblioteca (ex: mínimo de funcionários por turno, restrições de senioridade) e maximize a satisfação global.
+
+## Experimentos Comparativos (pasta `Codigos Escalados`)
+
+A pasta `Codigos Escalados` reúne tudo o que é necessário para reproduzir o estudo computacional que compara as três abordagens em instâncias de maior porte:
+
+* `ModeloEscaladoGurobi.py` — decomposição em duas etapas (Python + Gurobi);
+* `ModeloPadroesEscalavel.cpp` — modelo baseado em padrões semanais (C++ + Gurobi);
+* `ModeloFluxoGurobiEscalado.py` — modelo baseado em fluxos em uma rede de séries com estados expandidos (Python + Gurobi);
+* `RestricoesSemestre/` — calendários reais (período e dias sem expediente) dos semestres 2/2024, 1/2025, 2/2025 e 1/2026;
+* `Respostasfuncionarios/` — 20 tabelas de preferências **fictícias** (5 por semestre, `S-AAAA-T.csv`), cada uma com 54 funcionárias;
+* `Gerador_de_resposta_de_escalas.ipynb` — script que gerou essas tabelas, sorteando com probabilidades iguais "Gostaria", "Indiferente" ou "Não Gostaria" para cada funcionária e dia, a partir do formato do formulário real (os arquivos gerados foram renomeados para o padrão `S-AAAA-T.csv`);
+* `Resultados/resultados_comparativo.xlsx` e `Resultados/resultados_comparativo.csv` — resultados das 400 execuções (4 modelos × 4 semestres × 5 tamanhos de equipe × 5 tabelas): menor felicidade, valor da função objetivo, GAP e tempo.
+
+As equipes têm N ∈ {6, 18, 30, 42, 54} funcionárias, obtidas replicando a equipe real de seis funcionárias e multiplicando as demandas proporcionalmente. Os experimentos usaram o Gurobi 13.0.1 com limite de 3600 s por instância. As tabelas de preferências são fictícias e não contêm dados pessoais; as preferências reais das funcionárias da Biblioteca não são divulgadas.
 
 ## Primeiros Passos
 
@@ -75,9 +89,13 @@ Este projeto é distribuído sob a **Licença Pública Geral GNU (GPL)**. Esta l
 
 ## Agradecimentos
 
+O presente trabalho foi realizado com apoio da Fundação de Amparo à Pesquisa do Estado de São Paulo (FAPESP), Brasil. Processo nº 2025/01587-2.
+
+> As opiniões, hipóteses e conclusões ou recomendações expressas neste material são de responsabilidade do(s) autor(es) e não necessariamente refletem a visão da FAPESP.
+
 Este trabalho é fruto de muita colaboração. Gostaria de expressar meus sinceros agradecimentos a:
 
-* **FAPESP** (Fundação de Amparo à Pesquisa do Estado de São Paulo), pelo apoio financeiro e fomento à pesquisa de Iniciação Científica.
+* **FAPESP** (Fundação de Amparo à Pesquisa do Estado de São Paulo), pelo apoio financeiro à Iniciação Científica (processo nº 2025/01587-2).
 * **Professora Dra. Franklina Maria Bragion Toledo** (Orientadora).
 * **Dr. Douglas N. Nogueira** (Coorientador).
 * **Prof. Greet Vanden Berghe**, pela sugestão da adoção do modelo de padrões, que abriu novos caminhos metodológicos para este projeto.
